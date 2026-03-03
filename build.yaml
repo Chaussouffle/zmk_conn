@@ -1,0 +1,6 @@
+include:
+  # Dongle USB (XIAO nRF52840 Plus ? board Zephyr: xiao_ble)
+  - board: xiao_ble
+    shield: zmk_conn
+    # Optionnel: si tu veux un nom distinct côté artefacts
+    # artifact-name: zmk_conn_dongle
