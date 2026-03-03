@@ -1,2 +1,0 @@
-config SHIELD_ZMK_CONN
-    def_bool $(shields_list_contains,zmk_conn)
