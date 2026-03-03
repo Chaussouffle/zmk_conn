@@ -1,0 +1,51 @@
+name: Build ZMK (zmk_conn)
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/zmkfirmware/zmk-build-arm:4.1
+
+    steps:
+      - name: Checkout config repo
+        uses: actions/checkout@v4
+
+      - name: West init (ZMK manifest)
+        run: |
+          west init -m https://github.com/zmkfirmware/zmk \
+            --mr main \
+            --mf app/west.yml \
+            zmk
+
+      - name: West update
+        working-directory: zmk
+        run: west update --fetch-opt=--filter=tree:0
+
+      - name: West zephyr-export
+        working-directory: zmk
+        run: west zephyr-export
+
+      - name: Build zmk_conn (xiao_ble)
+        working-directory: zmk
+        run: |
+          west build -s zmk/app -b xiao_ble -- \
+            -DSHIELD=zmk_conn \
+            -DZMK_CONFIG="${GITHUB_WORKSPACE}/config"
+
+      - name: Package firmware
+        working-directory: zmk
+        run: |
+          test -f build/zephyr/zmk.uf2
+          cp build/zephyr/zmk.uf2 "${GITHUB_WORKSPACE}/zmk_conn_xiao_ble.uf2"
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zmk_conn_xiao_ble_firmware
+          path: zmk_conn_xiao_ble.uf2
+          if-no-files-found: error
